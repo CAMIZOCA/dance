@@ -3,7 +3,7 @@
 **Versión:** 0.1.0-foundation (sin release)
 **Fase actual:** Fase 0 — integrada localmente; gate Docker/PostgreSQL pendiente por entorno
 **Última actualización:** 2026-09-07
-**Último commit validado:** pendiente del commit de integración de esta Fase 0
+**Último commit validado:** `5ac57512e81999a1a97933b43015d0d94bfb845e`
 
 ## Completado
 
