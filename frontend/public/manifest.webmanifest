@@ -1,0 +1,15 @@
+{
+  "name": "Danza — Archivo vivo",
+  "short_name": "Danza",
+  "description": "Clases, grupos y memoria de la danza local.",
+  "lang": "es",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f3efe7",
+  "theme_color": "#17211b",
+  "icons": [
+    { "src": "/dance-mark.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
