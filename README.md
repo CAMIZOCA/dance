@@ -8,7 +8,7 @@ La Fase 0 está integrada y validada localmente con SQLite/Chromium. El gate de 
 
 ## Stack fijado
 
-- Laravel 13.30.1, PHP 8.3+
+- Laravel 13.30.1, PHP 8.4.1+
 - React 19, TypeScript estricto, Vite 7 y Tailwind CSS 4
 - PostgreSQL 17 y Redis 7
 - Docker Compose y baseline separado para Coolify
