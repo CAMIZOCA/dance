@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Builders\TenantOwnedBuilder;
 use App\Models\Concerns\BelongsToOrganization;
 use Database\Factories\GroupMembershipFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -14,6 +15,9 @@ class GroupMembership extends Model
 {
     /** @use HasFactory<GroupMembershipFactory> */
     use BelongsToOrganization, HasFactory;
+
+    /** @var class-string<TenantOwnedBuilder<static>> */
+    protected static string $builder = TenantOwnedBuilder::class;
 
     protected $fillable = [
         'dance_group_id', 'user_id', 'responsibility', 'status', 'started_at', 'ended_at', 'assigned_by',

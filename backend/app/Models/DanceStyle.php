@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Builders\TenantOwnedBuilder;
 use App\Models\Concerns\BelongsToOrganization;
 use Database\Factories\DanceStyleFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -15,6 +16,9 @@ class DanceStyle extends Model
 {
     /** @use HasFactory<DanceStyleFactory> */
     use BelongsToOrganization, HasFactory;
+
+    /** @var class-string<TenantOwnedBuilder<static>> */
+    protected static string $builder = TenantOwnedBuilder::class;
 
     protected $fillable = ['name', 'slug', 'is_active'];
 

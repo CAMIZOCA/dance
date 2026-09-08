@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Builders\TenantOwnedBuilder;
 use App\Models\Concerns\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -14,6 +15,9 @@ use InvalidArgumentException;
 class Role extends Model
 {
     use BelongsToOrganization;
+
+    /** @var class-string<TenantOwnedBuilder<static>> */
+    protected static string $builder = TenantOwnedBuilder::class;
 
     protected $fillable = ['key', 'name', 'is_system'];
 

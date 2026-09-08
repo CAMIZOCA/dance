@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Models\Concerns;
 
-use App\Models\Builders\TenantOwnedBuilder;
 use App\Tenancy\TenantContext;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -12,9 +11,6 @@ use LogicException;
 
 trait BelongsToOrganization
 {
-    /** @var class-string<TenantOwnedBuilder<*>> */
-    protected static string $builder = TenantOwnedBuilder::class;
-
     protected static function bootBelongsToOrganization(): void
     {
         static::addGlobalScope('organization', function (Builder $builder): void {
