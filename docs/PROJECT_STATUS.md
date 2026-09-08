@@ -1,9 +1,9 @@
 # Estado del proyecto
 
-**Versión:** 0.1.0-foundation (sin release)
-**Fase actual:** Fase 0 — integrada localmente; gate Docker/PostgreSQL pendiente por entorno
-**Última actualización:** 2026-09-07
-**Último commit validado:** `5ac57512e81999a1a97933b43015d0d94bfb845e`
+**Versión:** 0.2.0-core-identity (sin release)
+**Fase actual:** Fase 1 — Core Identity en implementación; gate Docker/PostgreSQL pendiente por entorno
+**Última actualización:** 2026-09-08
+**Último commit validado:** `e642c714ab1cdb55da069235811ef3a4e94b6992`
 
 ## Completado
 
@@ -15,6 +15,8 @@
 - PWA instalable con shell offline, actualización confirmada, exclusión de API/media/privado y purga al cerrar sesión o cambiar tenant.
 - Compose local y producción separados; PostgreSQL 17, Redis 7, backend, worker, scheduler y frontend con healthchecks/volúmenes. Baseline Coolify fail-closed para secretos.
 - CI configurado con PostgreSQL real, Redis, Pest, PHPStan, Pint, frontend gates y Playwright.
+- Fase 1 / P1-ID-01 parcial: API JSON versionada sobre guard `web` para login/logout, reset, verificación de email, `/me`, listado/selección de tenants, cabeceras `no-store`, rate limits y middleware de `TenantContext` por sesión.
+- Frontend PWA conectado al flujo de identidad: login, recuperación, selección explícita de academia, shell autenticado, edición de perfil, cambio de tenant y logout con purga de caché privada.
 
 ## Evidencia ejecutada localmente
 
@@ -29,7 +31,7 @@
 | `composer audit --locked` | PASS, sin advisories |
 | `npm run lint` | PASS |
 | `npm run typecheck` | PASS |
-| `npm run test` | PASS, Vitest 2/2 |
+| `npm run test` | PASS, Vitest 3/3 |
 | `npm run build` | PASS, 2.093 módulos |
 | `npm run test:e2e` | PASS, Playwright 12/12 móvil + escritorio |
 | `npm audit` | PASS, 0 vulnerabilidades |
@@ -46,6 +48,7 @@ QA independiente aprobó condicionalmente el candidato local. Seguridad encontr�
 ## Alcance diferido y riesgos conocidos
 
 - Autenticación HTTP, email verificado, policies, resolución tenant por request y 2FA pertenecen a Fase 1.
+- P1-ID-01 ya cubre identidad básica; faltan endurecimientos de producción como textos/email finales, posible contrato formal para CSRF, y validación sobre PostgreSQL real cuando el entorno lo permita.
 - Clases, biblioteca, media, comunidad, eventos, comercio y gamificación existen como diseño; sus tablas/workflows y volúmenes demo se crean en sus fases, no se simulan prematuramente en Fase 0.
 - Borrado/archivo de academias y retención/auditoría deben implementarse antes de exponer operaciones destructivas; hoy no existen endpoints de borrado.
 - Restore real, HSTS/TLS en el edge Coolify y escaneo de imágenes se validan en un entorno de despliegue sano.
@@ -55,4 +58,4 @@ QA independiente aprobó condicionalmente el candidato local. Seguridad encontr�
 1. En un host Docker sano, construir las imágenes y levantar `compose.yaml`.
 2. Ejecutar migración/seed y las 14 pruebas con `phpunit.postgres.xml`; verificar healthchecks y persistencia tras reinicio.
 3. Registrar esa evidencia y cerrar formalmente el gate de runtime de Fase 0.
-4. Solicitar aprobación antes de iniciar Fase 1 — Core Identity.
+4. Completar revisión de P1-ID-01 sobre PostgreSQL real y cerrar el incremento antes de abrir el siguiente corte de Fase 1.

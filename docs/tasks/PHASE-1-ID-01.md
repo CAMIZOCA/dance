@@ -1,7 +1,7 @@
 # P1-ID-01 — Identidad y acceso por tenant
 
 **Fase:** 1 — Core Identity
-**Estado:** en implementación
+**Estado:** integrado localmente; pendiente de commit y validación PostgreSQL/Docker
 **Responsable:** `00-orchestrator`
 **Especialistas:** `03-auth-tenancy-rbac`, `04-frontend-pwa`, `11-security`, `12-qa`
 
@@ -53,6 +53,20 @@ Los nombres concretos podrán ajustarse a convenciones Laravel sin cambiar la se
 - Frontend cubre estados cargando, error, sesión expirada y selección de tenant.
 - Pest, PHPStan, Pint, Vitest, ESLint, TypeScript, build y Playwright aplicables pasan.
 
+## Evidencia local — 2026-09-08
+
+- `php artisan test --compact`: PASS, 23 pruebas, 108 aserciones.
+- `vendor/bin/phpstan analyse --memory-limit=1G`: PASS, 0 errores.
+- `vendor/bin/pint --dirty --format agent`: PASS.
+- `composer validate --strict`: PASS.
+- `composer audit --locked`: PASS, sin advisories.
+- `npm run lint`: PASS.
+- `npm run typecheck`: PASS.
+- `npm run test`: PASS, Vitest 3/3.
+- `npm run build`: PASS.
+- `npm run test:e2e`: PASS, Playwright 12/12 móvil + escritorio.
+- `npm audit`: PASS, 0 vulnerabilidades tras actualizar Vitest a 4.1.11.
+
 ## Riesgos
 
 - Fijación de sesión, CSRF, enumeración de cuentas, fuerza bruta e IDOR tenant.
@@ -64,4 +78,3 @@ Los nombres concretos podrán ajustarse a convenciones Laravel sin cambiar la se
 - **Tesis visual:** acceso editorial cálido y sobrio, conectado con el archivo vivo de danza y sin apariencia de panel SaaS genérico.
 - **Contenido:** identidad de academia, formulario directo, ayuda contextual y acción primaria única.
 - **Interacción:** entrada breve del formulario, transición compartida entre acceso/recuperación y confirmación clara al cambiar de academia.
-

@@ -1,5 +1,45 @@
 import { expect, test } from '@playwright/test'
 
+const userPayload = {
+  id: 1,
+  name: 'Camila Demo',
+  email: 'student@demo.local',
+  email_verified: true,
+  active_organization_id: 10
+}
+
+const tenantPayload = {
+  id: 10,
+  name: 'Ritmo Demo Academy',
+  slug: 'ritmo-demo-academy',
+  primary_color: '#e45b3d',
+  secondary_color: '#17211b',
+  membership: { status: 'active', access_expires_at: null, joined_at: null },
+  is_active: true
+}
+
+async function mockAuthenticatedApi(page: import('@playwright/test').Page) {
+  await page.route('**/api/v1/csrf-token', (route) => route.fulfill({
+    contentType: 'application/json',
+    headers: { 'Cache-Control': 'no-store, private' },
+    body: JSON.stringify({ csrf_token: 'token' })
+  }))
+  await page.route('**/api/v1/me', (route) => route.fulfill({
+    contentType: 'application/json',
+    headers: { 'Cache-Control': 'no-store, private' },
+    body: JSON.stringify({ data: userPayload })
+  }))
+  await page.route('**/api/v1/tenants', (route) => route.fulfill({
+    contentType: 'application/json',
+    headers: { 'Cache-Control': 'no-store, private' },
+    body: JSON.stringify({ data: [tenantPayload] })
+  }))
+  await page.route('**/api/v1/auth/logout', (route) => route.fulfill({
+    status: 204,
+    headers: { 'Cache-Control': 'no-store, private' }
+  }))
+}
+
 async function activateAppServiceWorker(page: import('@playwright/test').Page) {
   await page.goto('/')
   await page.evaluate(() => navigator.serviceWorker.ready)
@@ -8,6 +48,7 @@ async function activateAppServiceWorker(page: import('@playwright/test').Page) {
 }
 
 test('abre el shell y navega a Explorar', async ({ page }) => {
+  await mockAuthenticatedApi(page)
   await page.goto('/')
   await expect(page.getByRole('heading', { name: 'Buenas tardes, Camila' })).toBeVisible()
   await page.getByRole('button', { name: 'Explorar' }).first().click()
@@ -15,6 +56,7 @@ test('abre el shell y navega a Explorar', async ({ page }) => {
 })
 
 test('expone un manifiesto PWA en español', async ({ page, request }) => {
+  await mockAuthenticatedApi(page)
   await page.goto('/')
   const manifestHref = await page.locator('link[rel="manifest"]').getAttribute('href')
   expect(manifestHref).toBeTruthy()
@@ -26,6 +68,7 @@ test('expone un manifiesto PWA en español', async ({ page, request }) => {
 })
 
 test('mantiene el shell disponible sin conexión', async ({ page, context }) => {
+  await mockAuthenticatedApi(page)
   await activateAppServiceWorker(page)
 
   await context.setOffline(true)
@@ -35,6 +78,7 @@ test('mantiene el shell disponible sin conexión', async ({ page, context }) => 
 })
 
 test('mantiene el deep link después de refrescar', async ({ page }) => {
+  await mockAuthenticatedApi(page)
   await page.goto('/explorar')
   await expect(page.getByRole('heading', { name: 'Explorar', level: 1 })).toBeVisible()
 
@@ -45,6 +89,7 @@ test('mantiene el deep link después de refrescar', async ({ page }) => {
 })
 
 test('nunca cachea API ni respuestas privadas y limpia cachés sensibles', async ({ page, context }) => {
+  await mockAuthenticatedApi(page)
   await context.route('**/api/private-profile', (route) => route.fulfill({
     contentType: 'application/json',
     headers: { 'Cache-Control': 'private, no-store', 'Set-Cookie': 'session=secret; HttpOnly' },
@@ -81,6 +126,7 @@ test('nunca cachea API ni respuestas privadas y limpia cachés sensibles', async
 })
 
 test('detecta una actualización y activa el worker solo tras confirmación', async ({ page }) => {
+  await mockAuthenticatedApi(page)
   await activateAppServiceWorker(page)
 
   await page.evaluate(async () => {
