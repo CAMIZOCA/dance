@@ -49,7 +49,19 @@ jobs:
       - run: vendor/bin/pint --test
       - run: composer analyse
       - run: composer fresh-demo
-      - run: php artisan test --configuration phpunit.postgres.xml
+      - name: Run PostgreSQL tests
+        shell: bash
+        run: |
+          set +e
+          php artisan test --configuration phpunit.postgres.xml --compact 2>&1 | tee postgres-test-output.log
+          status=${PIPESTATUS[0]}
+
+          if [ "$status" -ne 0 ]; then
+            summary=$(tail -n 80 postgres-test-output.log | tr '\n' ' ' | sed 's/%/%25/g; s/\r/%0D/g; s/:/%3A/g')
+            echo "::error file=backend/phpunit.postgres.xml,line=1::PostgreSQL tests failed: ${summary}"
+          fi
+
+          exit "$status"
       - run: composer audit --locked
 
   frontend:
