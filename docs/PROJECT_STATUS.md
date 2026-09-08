@@ -3,7 +3,7 @@
 **Versión:** 0.2.0-core-identity (sin release)
 **Fase actual:** Fase 1 — Core Identity en implementación; gate Docker/PostgreSQL pendiente por entorno
 **Última actualización:** 2026-09-08
-**Último commit validado:** `ac26f7bbab223bfa4c6530e153f09d961913eebb`
+**Última validación CI:** `ba76b4ce9107182a6721147b0c6a4bf5c152669e` en CI #7
 
 ## Completado
 
@@ -38,6 +38,8 @@
 | Compose local/producción `config --quiet` | PASS; producción falla sin secretos como se espera |
 
 QA independiente aprobó condicionalmente el candidato local. Seguridad encontró bypasses de RBAC, operaciones masivas tenant y caché privada durante revisiones; fueron corregidos y sus reproducciones quedaron bloqueadas por regresiones.
+
+CI #7 en GitHub pasó completo sobre `ba76b4ce9107182a6721147b0c6a4bf5c152669e`: backend con PostgreSQL 17 y Redis, frontend, Playwright y auditorías.
 
 ## Bloqueo ambiental
 

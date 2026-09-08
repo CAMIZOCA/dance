@@ -1,7 +1,7 @@
 # P1-ID-01 — Identidad y acceso por tenant
 
 **Fase:** 1 — Core Identity
-**Estado:** integrado localmente; pendiente de commit y validación PostgreSQL/Docker
+**Estado:** integrado y validado en CI; Docker local sigue pendiente por entorno
 **Responsable:** `00-orchestrator`
 **Especialistas:** `03-auth-tenancy-rbac`, `04-frontend-pwa`, `11-security`, `12-qa`
 
@@ -66,6 +66,7 @@ Los nombres concretos podrán ajustarse a convenciones Laravel sin cambiar la se
 - `npm run build`: PASS.
 - `npm run test:e2e`: PASS, Playwright 12/12 móvil + escritorio.
 - `npm audit`: PASS, 0 vulnerabilidades tras actualizar Vitest a 4.1.11.
+- CI #7 sobre `ba76b4ce9107182a6721147b0c6a4bf5c152669e`: PASS completo, incluyendo PostgreSQL 17.
 
 ## Riesgos
 
