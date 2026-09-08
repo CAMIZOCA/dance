@@ -3,7 +3,7 @@
 **Versión:** 0.2.0-core-identity (sin release)
 **Fase actual:** Fase 1 — Core Identity en implementación; gate Docker/PostgreSQL pendiente por entorno
 **Última actualización:** 2026-09-08
-**Último commit validado:** `e642c714ab1cdb55da069235811ef3a4e94b6992`
+**Último commit validado:** `ac26f7bbab223bfa4c6530e153f09d961913eebb`
 
 ## Completado
 
