@@ -62,6 +62,22 @@ const resources = {
         unverified: 'correo pendiente de verificación',
         logout: 'Cerrar sesión'
       },
+      records: {
+        title: 'Últimos registros',
+        empty: 'Aún no hay acciones guardadas en esta academia.',
+        saved: 'Registro guardado en la academia activa.',
+        now: 'Ahora',
+        types: {
+          class: 'Clase',
+          agenda: 'Agenda',
+          archive: 'Archivo',
+          group: 'Grupo',
+          explore: 'Explorar',
+          profile: 'Perfil',
+          tenant: 'Academia',
+          action: 'Acción'
+        }
+      },
       status: { loading: 'Preparando tu sesión...', offlineReady: 'La app ya funciona sin conexión.', updateReady: 'Hay una nueva versión disponible.', update: 'Actualizar', close: 'Cerrar' }
     }
   }

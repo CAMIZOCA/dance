@@ -1,0 +1,11 @@
+<IfModule mod_rewrite.c>
+    Options -Indexes
+
+    RewriteEngine On
+
+    RewriteCond %{DOCUMENT_ROOT}/backend/public/$1 -f [OR]
+    RewriteCond %{DOCUMENT_ROOT}/backend/public/$1 -d
+    RewriteRule ^(.*)$ backend/public/$1 [END]
+
+    RewriteRule ^ backend/public/index.php [END]
+</IfModule>

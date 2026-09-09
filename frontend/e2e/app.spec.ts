@@ -18,6 +18,18 @@ const tenantPayload = {
   is_active: true
 }
 
+const recordsPayload = {
+  data: [
+    {
+      id: 1,
+      type: 'archive',
+      label: 'Huellas de ciudad',
+      metadata: { screen: 'home' },
+      created_at: '2026-09-08T23:28:53.000000Z'
+    }
+  ]
+}
+
 async function mockAuthenticatedApi(page: import('@playwright/test').Page) {
   await page.route('**/api/v1/csrf-token', (route) => route.fulfill({
     contentType: 'application/json',
@@ -34,6 +46,22 @@ async function mockAuthenticatedApi(page: import('@playwright/test').Page) {
     headers: { 'Cache-Control': 'no-store, private' },
     body: JSON.stringify({ data: [tenantPayload] })
   }))
+  await page.route('**/api/v1/records', (route) => {
+    if (route.request().method() === 'POST') {
+      return route.fulfill({
+        status: 201,
+        contentType: 'application/json',
+        headers: { 'Cache-Control': 'no-store, private' },
+        body: JSON.stringify({ data: { ...recordsPayload.data[0], id: 2, type: 'class', label: 'Laboratorio de piso' } })
+      })
+    }
+
+    return route.fulfill({
+      contentType: 'application/json',
+      headers: { 'Cache-Control': 'no-store, private' },
+      body: JSON.stringify(recordsPayload)
+    })
+  })
   await page.route('**/api/v1/auth/logout', (route) => route.fulfill({
     status: 204,
     headers: { 'Cache-Control': 'no-store, private' }
@@ -53,6 +81,17 @@ test('abre el shell y navega a Explorar', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Buenas tardes, Camila' })).toBeVisible()
   await page.getByRole('button', { name: 'Explorar' }).first().click()
   await expect(page.getByRole('heading', { name: 'Explorar', level: 1 })).toBeVisible()
+})
+
+test('guarda una acción desde el inicio y la enseña en perfil', async ({ page }) => {
+  await mockAuthenticatedApi(page)
+  await page.goto('/')
+  await page.getByRole('button', { name: /Laboratorio de piso/i }).click()
+  await expect(page.getByText('Registro guardado en la academia activa.')).toBeVisible()
+
+  await page.getByRole('button', { name: 'Perfil' }).first().click()
+  await expect(page.getByRole('heading', { name: 'Últimos registros' })).toBeVisible()
+  await expect(page.getByText('Laboratorio de piso')).toBeVisible()
 })
 
 test('expone un manifiesto PWA en español', async ({ page, request }) => {

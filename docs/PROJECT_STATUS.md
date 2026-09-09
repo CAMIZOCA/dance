@@ -1,8 +1,8 @@
 # Estado del proyecto
 
-**Versión:** 0.2.0-core-identity (sin release)
+**Versión:** 0.2.1-core-identity-records (sin release)
 **Fase actual:** Fase 1 — Core Identity en implementación; gate Docker/PostgreSQL pendiente por entorno
-**Última actualización:** 2026-09-08
+**Última actualización:** 2026-09-09
 **Última validación CI:** `ba76b4ce9107182a6721147b0c6a4bf5c152669e` en CI #7
 
 ## Completado
@@ -17,23 +17,25 @@
 - CI configurado con PostgreSQL real, Redis, Pest, PHPStan, Pint, frontend gates y Playwright.
 - Fase 1 / P1-ID-01 parcial: API JSON versionada sobre guard `web` para login/logout, reset, verificación de email, `/me`, listado/selección de tenants, cabeceras `no-store`, rate limits y middleware de `TenantContext` por sesión.
 - Frontend PWA conectado al flujo de identidad: login, recuperación, selección explícita de academia, shell autenticado, edición de perfil, cambio de tenant y logout con purga de caché privada.
+- Persistencia inicial de acciones de pantalla: endpoint `/api/v1/records` protegido por sesión, email verificado y academia activa; registros ligados a usuario y tenant con aislamiento cross-tenant; Inicio, agenda, archivo, Grupos, Explorar y Clases guardan actividad real y el Perfil muestra los últimos registros.
+- Entorno Laragon local verificado: `dance.test` resuelve a `127.0.0.1`, Apache escucha en puerto 80 y el dominio local enruta hacia `backend/public` mediante `.htaccess`; `APP_URL` local quedó en `http://dance.test`.
 
 ## Evidencia ejecutada localmente
 
 | Gate | Resultado |
 |---|---|
 | `composer fresh-demo` | PASS sobre SQLite local, migraciones + seed |
-| `php artisan test --compact` | PASS, 14/14 pruebas, 62 aserciones |
+| `php artisan test --compact` | PASS, 27/27 pruebas, 126 aserciones |
 | rollback/reapply migraciones de endurecimiento | PASS sobre SQLite |
 | `vendor/bin/phpstan analyse --memory-limit=1G` | PASS, 0 errores |
-| `vendor/bin/pint --test` | PASS |
+| `vendor/bin/pint --dirty --format agent` | PASS |
 | `composer validate --strict` | PASS |
 | `composer audit --locked` | PASS, sin advisories |
 | `npm run lint` | PASS |
 | `npm run typecheck` | PASS |
-| `npm run test` | PASS, Vitest 3/3 |
+| `npm run test` | PASS, Vitest 4/4 |
 | `npm run build` | PASS, 2.093 módulos |
-| `npm run test:e2e` | PASS, Playwright 12/12 móvil + escritorio |
+| `npm run test:e2e` | PASS, Playwright 14/14 móvil + escritorio |
 | `npm audit` | PASS, 0 vulnerabilidades |
 | Compose local/producción `config --quiet` | PASS; producción falla sin secretos como se espera |
 
@@ -61,3 +63,4 @@ CI #7 en GitHub pasó completo sobre `ba76b4ce9107182a6721147b0c6a4bf5c152669e`:
 2. Ejecutar migración/seed y las 14 pruebas con `phpunit.postgres.xml`; verificar healthchecks y persistencia tras reinicio.
 3. Registrar esa evidencia y cerrar formalmente el gate de runtime de Fase 0.
 4. Completar revisión de P1-ID-01 sobre PostgreSQL real y cerrar el incremento antes de abrir el siguiente corte de Fase 1.
+5. Evolucionar los registros de actividad hacia entidades de dominio específicas (reservas, clases, colecciones y comunidad) cuando se abra formalmente cada módulo.

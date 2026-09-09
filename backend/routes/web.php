@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Api\V1\ActivityRecordController;
 use App\Http\Controllers\Api\V1\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Api\V1\Auth\EmailVerificationNotificationController;
 use App\Http\Controllers\Api\V1\Auth\NewPasswordController;
@@ -45,5 +46,10 @@ Route::prefix('api/v1')
 
             Route::get('tenant/context', fn () => response()->json(['organization_id' => app(TenantContext::class)->requireId()]))
                 ->middleware(['verified', EnsureActiveTenant::class]);
+
+            Route::middleware(['verified', EnsureActiveTenant::class])->group(function (): void {
+                Route::get('records', [ActivityRecordController::class, 'index']);
+                Route::post('records', [ActivityRecordController::class, 'store']);
+            });
         });
     });

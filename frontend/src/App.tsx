@@ -45,6 +45,14 @@ type Tenant = {
   is_active: boolean
 }
 
+type ActivityRecord = {
+  id: number
+  type: 'class' | 'agenda' | 'archive' | 'group' | 'explore' | 'profile' | 'tenant' | 'action'
+  label: string
+  metadata: Record<string, unknown>
+  created_at: string | null
+}
+
 type ApiEnvelope<T> = {
   data: T
 }
@@ -53,7 +61,7 @@ type AuthState =
   | { status: 'loading' }
   | { status: 'guest' }
   | { status: 'selecting-tenant'; user: ApiUser; tenants: Tenant[] }
-  | { status: 'authenticated'; user: ApiUser; tenants: Tenant[]; activeTenant: Tenant }
+  | { status: 'authenticated'; user: ApiUser; tenants: Tenant[]; activeTenant: Tenant; records: ActivityRecord[] }
 
 const screenPaths: Record<Screen, string> = {
   home: '/',
@@ -118,6 +126,12 @@ async function prepareCsrf(): Promise<void> {
   await apiRequest<{ csrf_token: string }>('/api/v1/csrf-token')
 }
 
+async function loadRecords(): Promise<ActivityRecord[]> {
+  const recordsEnvelope = await apiRequest<ApiEnvelope<ActivityRecord[]>>('/api/v1/records')
+
+  return recordsEnvelope.data
+}
+
 async function loadSession(): Promise<AuthState> {
   try {
     const [userEnvelope, tenantsEnvelope] = await Promise.all([
@@ -130,7 +144,13 @@ async function loadSession(): Promise<AuthState> {
       return { status: 'selecting-tenant', user: userEnvelope.data, tenants: tenantsEnvelope.data }
     }
 
-    return { status: 'authenticated', user: userEnvelope.data, tenants: tenantsEnvelope.data, activeTenant }
+    return {
+      status: 'authenticated',
+      user: userEnvelope.data,
+      tenants: tenantsEnvelope.data,
+      activeTenant,
+      records: await loadRecords()
+    }
   } catch {
     return { status: 'guest' }
   }
@@ -167,7 +187,17 @@ function Navigation({ active, onNavigate }: { active: Screen; onNavigate: (scree
   )
 }
 
-function HomeScreen({ onNavigate, user, tenant }: { onNavigate: (screen: Screen) => void; user: ApiUser; tenant: Tenant }) {
+function HomeScreen({
+  onNavigate,
+  onRecordAction,
+  user,
+  tenant
+}: {
+  onNavigate: (screen: Screen) => void
+  onRecordAction: (type: ActivityRecord['type'], label: string, metadata?: Record<string, unknown>) => void
+  user: ApiUser
+  tenant: Tenant
+}) {
   const { t } = useTranslation()
   return (
     <motion.div {...entrance} className="screen home-screen">
@@ -187,7 +217,12 @@ function HomeScreen({ onNavigate, user, tenant }: { onNavigate: (screen: Screen)
           <h2 id="next-class-title">{t('home.next')}</h2>
           <span>18:30</span>
         </div>
-        <motion.button className="class-feature" whileTap={{ scale: 0.99 }} type="button">
+        <motion.button
+          className="class-feature"
+          whileTap={{ scale: 0.99 }}
+          type="button"
+          onClick={() => onRecordAction('class', t('featuredClass.title'), { screen: 'home', place: t('featuredClass.place') })}
+        >
           <div className="movement-figure" aria-hidden="true">
             <span className="figure-head" />
             <span className="figure-body" />
@@ -214,8 +249,8 @@ function HomeScreen({ onNavigate, user, tenant }: { onNavigate: (screen: Screen)
           <button type="button" onClick={() => onNavigate('classes')}>{t('home.seeAll')}</button>
         </div>
         <div className="agenda-list">
-          <AgendaRow day="09" weekday={t('agenda.first.weekday')} title={t('agenda.first.title')} meta={t('agenda.first.meta')} tone="dark" />
-          <AgendaRow day="12" weekday={t('agenda.second.weekday')} title={t('agenda.second.title')} meta={t('agenda.second.meta')} tone="coral" />
+          <AgendaRow day="09" weekday={t('agenda.first.weekday')} title={t('agenda.first.title')} meta={t('agenda.first.meta')} tone="dark" onSelect={() => onRecordAction('agenda', t('agenda.first.title'), { screen: 'home', day: '09' })} />
+          <AgendaRow day="12" weekday={t('agenda.second.weekday')} title={t('agenda.second.title')} meta={t('agenda.second.meta')} tone="coral" onSelect={() => onRecordAction('agenda', t('agenda.second.title'), { screen: 'home', day: '12' })} />
         </div>
       </section>
 
@@ -227,7 +262,7 @@ function HomeScreen({ onNavigate, user, tenant }: { onNavigate: (screen: Screen)
         </div>
         <div className="archive-strip" aria-label={`${t('archive.collection')}: ${t('archive.title')}`}>
           <div className="archive-art archive-art-one"><span>1987</span></div>
-          <div className="archive-copy"><p>{t('archive.collection')}</p><h3>{t('archive.title')}</h3><p>{t('archive.meta')}</p><button type="button">{t('actions.openCollection')} <ArrowRight size={16} /></button></div>
+          <div className="archive-copy"><p>{t('archive.collection')}</p><h3>{t('archive.title')}</h3><p>{t('archive.meta')}</p><button type="button" onClick={() => onRecordAction('archive', t('archive.title'), { screen: 'home', collection: t('archive.collection') })}>{t('actions.openCollection')} <ArrowRight size={16} /></button></div>
           <div className="archive-art archive-art-two"><span>2004</span></div>
         </div>
       </section>
@@ -235,9 +270,9 @@ function HomeScreen({ onNavigate, user, tenant }: { onNavigate: (screen: Screen)
   )
 }
 
-function AgendaRow({ day, weekday, title, meta, tone }: { day: string; weekday: string; title: string; meta: string; tone: 'dark' | 'coral' }) {
+function AgendaRow({ day, weekday, title, meta, tone, onSelect }: { day: string; weekday: string; title: string; meta: string; tone: 'dark' | 'coral'; onSelect: () => void }) {
   return (
-    <button className="agenda-row" type="button">
+    <button className="agenda-row" type="button" onClick={onSelect}>
       <span className={`date-block ${tone}`}><strong>{day}</strong><small>{weekday}</small></span>
       <span className="agenda-copy"><strong>{title}</strong><small>{meta}</small></span>
       <ChevronRight size={18} />
@@ -252,7 +287,9 @@ function SecondaryScreen({
   tenants,
   onTenantChange,
   onLogout,
-  onUserChange
+  onUserChange,
+  onRecordAction,
+  records
 }: {
   screen: Exclude<Screen, 'home'>
   user: ApiUser
@@ -261,6 +298,8 @@ function SecondaryScreen({
   onTenantChange: (tenant: Tenant, user: ApiUser) => void
   onLogout: () => void
   onUserChange: (user: ApiUser) => void
+  onRecordAction: (type: ActivityRecord['type'], label: string, metadata?: Record<string, unknown>) => void
+  records: ActivityRecord[]
 }) {
   const { t } = useTranslation()
   const key = `screens.${screen}`
@@ -275,6 +314,7 @@ function SecondaryScreen({
         onTenantChange={onTenantChange}
         onLogout={onLogout}
         onUserChange={onUserChange}
+        records={records}
       />
     )
   }
@@ -289,7 +329,7 @@ function SecondaryScreen({
       </section>
       <div className="ruled-list">
         {items.map((item, index) => (
-          <button type="button" key={item}>
+          <button type="button" key={item} onClick={() => onRecordAction(screen === 'groups' ? 'group' : screen === 'explore' ? 'explore' : 'class', t(`${key}.${item}`), { screen, position: index + 1 })}>
             <span className="list-number">0{index + 1}</span>
             <span>{t(`${key}.${item}`)}</span>
             <ArrowRight size={19} />
@@ -429,7 +469,8 @@ function ProfileScreen({
   tenants,
   onTenantChange,
   onLogout,
-  onUserChange
+  onUserChange,
+  records
 }: {
   user: ApiUser
   tenant: Tenant
@@ -437,6 +478,7 @@ function ProfileScreen({
   onTenantChange: (tenant: Tenant, user: ApiUser) => void
   onLogout: () => void
   onUserChange: (user: ApiUser) => void
+  records: ActivityRecord[]
 }) {
   const { t } = useTranslation()
   const [name, setName] = useState(user.name)
@@ -507,6 +549,25 @@ function ProfileScreen({
           <button className="text-action logout-line" type="button" onClick={onLogout}><DoorOpen size={17} />{t('profile.logout')}</button>
         </div>
       </section>
+      <section className="records-panel" aria-labelledby="records-title">
+        <div className="section-heading">
+          <h2 id="records-title">{t('records.title')}</h2>
+          <span>{records.length}</span>
+        </div>
+        {records.length === 0 ? (
+          <p className="empty-records">{t('records.empty')}</p>
+        ) : (
+          <div className="records-list">
+            {records.slice(0, 5).map((record) => (
+              <article key={record.id}>
+                <span>{t(`records.types.${record.type}`)}</span>
+                <strong>{record.label}</strong>
+                <small>{record.created_at ? new Intl.DateTimeFormat('es-CO', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(record.created_at)) : t('records.now')}</small>
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
     </motion.div>
   )
 }
@@ -540,6 +601,7 @@ export default function App() {
   const { t } = useTranslation()
   const [active, setActive] = useState<Screen>(() => screenFromPath(window.location.pathname))
   const [authState, setAuthState] = useState<AuthState>({ status: 'loading' })
+  const [recordMessage, setRecordMessage] = useState<string | null>(null)
 
   useEffect(() => {
     void loadSession().then(setAuthState)
@@ -572,6 +634,28 @@ export default function App() {
     }
   }
 
+  const recordAction = async (type: ActivityRecord['type'], label: string, metadata: Record<string, unknown> = {}) => {
+    if (authState.status !== 'authenticated') return
+
+    setRecordMessage(null)
+
+    try {
+      await prepareCsrf()
+      const response = await apiRequest<ApiEnvelope<ActivityRecord>>('/api/v1/records', {
+        method: 'POST',
+        body: JSON.stringify({ type, label, metadata })
+      })
+
+      setAuthState({
+        ...authState,
+        records: [response.data, ...authState.records].slice(0, 20)
+      })
+      setRecordMessage(t('records.saved'))
+    } catch (error) {
+      setRecordMessage(error instanceof Error ? error.message : t('auth.genericError'))
+    }
+  }
+
   if (authState.status === 'loading') {
     return <main className="loading-shell"><Brand /><p>{t('status.loading')}</p></main>
   }
@@ -585,7 +669,7 @@ export default function App() {
       <>
         <TenantSelectionScreen
           state={authState}
-          onSelected={(tenant, user) => setAuthState({ status: 'authenticated', user, tenants: authState.tenants.map((candidate) => ({ ...candidate, is_active: candidate.id === tenant.id })), activeTenant: tenant })}
+          onSelected={(tenant, user) => void loadRecords().then((records) => setAuthState({ status: 'authenticated', user, tenants: authState.tenants.map((candidate) => ({ ...candidate, is_active: candidate.id === tenant.id })), activeTenant: tenant, records }))}
           onLogout={() => void logout()}
         />
         <PwaNotice />
@@ -605,7 +689,7 @@ export default function App() {
       <main>
         <AnimatePresence mode="wait">
           {active === 'home' ? (
-            <HomeScreen key="home" onNavigate={navigate} user={session.user} tenant={session.activeTenant} />
+            <HomeScreen key="home" onNavigate={navigate} onRecordAction={(type, label, metadata) => void recordAction(type, label, metadata)} user={session.user} tenant={session.activeTenant} />
           ) : (
             <SecondaryScreen
               key={active}
@@ -615,17 +699,21 @@ export default function App() {
               tenants={session.tenants}
               onLogout={() => void logout()}
               onUserChange={(user) => setAuthState({ ...session, user })}
-              onTenantChange={(tenant, user) => setAuthState({
+              onRecordAction={(type, label, metadata) => void recordAction(type, label, metadata)}
+              records={session.records}
+              onTenantChange={(tenant, user) => void loadRecords().then((records) => setAuthState({
                 status: 'authenticated',
                 user,
                 activeTenant: tenant,
-                tenants: session.tenants.map((candidate) => ({ ...candidate, is_active: candidate.id === tenant.id }))
-              })}
+                tenants: session.tenants.map((candidate) => ({ ...candidate, is_active: candidate.id === tenant.id })),
+                records
+              }))}
             />
           )}
         </AnimatePresence>
       </main>
       <div className="mobile-navigation"><Navigation active={active} onNavigate={navigate} /></div>
+      {recordMessage && <motion.aside className="record-toast" role="status" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>{recordMessage}</motion.aside>}
       <PwaNotice />
     </div>
   )

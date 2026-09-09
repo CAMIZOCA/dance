@@ -21,6 +21,14 @@ const tenantPayload = {
   is_active: false
 }
 
+const recordPayload = {
+  id: 99,
+  type: 'class',
+  label: 'Laboratorio de piso',
+  metadata: { screen: 'home' },
+  created_at: '2026-09-08T23:28:53.000000Z'
+}
+
 function jsonResponse(body: unknown, init: ResponseInit = {}) {
   return Promise.resolve(new Response(JSON.stringify(body), {
     status: 200,
@@ -72,6 +80,10 @@ describe('App shell', () => {
           return jsonResponse({ data: { ...tenantPayload, is_active: true } })
         }
 
+        if (url.endsWith('/records')) {
+          return jsonResponse({ data: [] })
+        }
+
         return Promise.resolve(new Response(null, { status: 404 }))
       })
 
@@ -107,6 +119,10 @@ describe('App shell', () => {
         return jsonResponse({ data: [{ ...tenantPayload, is_active: true }] })
       }
 
+      if (url.endsWith('/records')) {
+        return jsonResponse({ data: [] })
+      }
+
       if (url.endsWith('/csrf-token')) {
         return jsonResponse({ csrf_token: 'token' })
       }
@@ -123,5 +139,46 @@ describe('App shell', () => {
     await user.click(screen.getByRole('button', { name: 'Guardar cambios' }))
 
     expect(await screen.findByText('Perfil actualizado.')).toBeInTheDocument()
+  })
+
+  it('guarda una acción de pantalla como registro de academia', async () => {
+    const user = userEvent.setup()
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockImplementation((input, init) => {
+      const url = input.toString()
+
+      if (url.endsWith('/me')) {
+        return jsonResponse({ data: { ...userPayload, active_organization_id: 10 } })
+      }
+
+      if (url.endsWith('/tenants')) {
+        return jsonResponse({ data: [{ ...tenantPayload, is_active: true }] })
+      }
+
+      if (url.endsWith('/records') && init?.method === 'POST') {
+        return jsonResponse({ data: recordPayload }, { status: 201 })
+      }
+
+      if (url.endsWith('/records')) {
+        return jsonResponse({ data: [] })
+      }
+
+      if (url.endsWith('/csrf-token')) {
+        return jsonResponse({ csrf_token: 'token' })
+      }
+
+      return Promise.resolve(new Response(null, { status: 404 }))
+    })
+
+    render(<App />)
+
+    await user.click(await screen.findByRole('button', { name: /Laboratorio de piso/i }))
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith(
+      '/api/v1/records',
+      expect.objectContaining({
+        method: 'POST'
+      })
+    ))
+    expect(await screen.findByText('Registro guardado en la academia activa.')).toBeInTheDocument()
   })
 })

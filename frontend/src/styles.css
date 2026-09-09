@@ -154,6 +154,15 @@ button:focus-visible { outline: 2px solid var(--coral); outline-offset: 3px; }
 .tenant-switcher { display: grid; align-content: start; gap: 10px; max-width: 520px; }
 .tenant-switcher label { color: rgba(23,33,27,.64); font-size: .74rem; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; }
 .logout-line { margin-top: 14px; }
+.records-panel { padding: 10px 0 34px; }
+.records-panel .section-heading > span { font-size: .92rem; }
+.empty-records { margin: 0; color: rgba(23,33,27,.62); font-size: .84rem; line-height: 1.5; }
+.records-list { display: grid; gap: 10px; }
+.records-list article { display: grid; gap: 6px; padding: 15px; border: 1px solid var(--line); background: rgba(255,255,255,.32); }
+.records-list span { color: var(--coral); font-size: .62rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+.records-list strong { font-family: Georgia, "Times New Roman", serif; font-size: 1.15rem; font-weight: 400; }
+.records-list small { color: rgba(23,33,27,.58); font-size: .68rem; }
+.record-toast { position: fixed; z-index: 45; right: 16px; bottom: 160px; left: 16px; padding: 13px 15px; background: var(--coral); color: white; box-shadow: 0 18px 45px rgba(92,30,12,.22); font-size: .78rem; font-weight: 700; }
 
 @keyframes spin {
   to { transform: rotate(360deg); }
@@ -187,6 +196,8 @@ button:focus-visible { outline: 2px solid var(--coral); outline-offset: 3px; }
   .auth-panel { padding: 44px clamp(34px, 5vw, 72px); }
   .tenant-shell { padding: 30px clamp(38px, 6vw, 80px) 90px; }
   .profile-layout { grid-template-columns: minmax(0, 1fr) minmax(280px, 380px); }
+  .records-panel { max-width: 720px; }
+  .record-toast { right: 24px; bottom: 96px; left: auto; width: fit-content; max-width: 420px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
