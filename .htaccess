@@ -3,9 +3,15 @@
 
     RewriteEngine On
 
-    RewriteCond %{DOCUMENT_ROOT}/backend/public/$1 -f [OR]
-    RewriteCond %{DOCUMENT_ROOT}/backend/public/$1 -d
-    RewriteRule ^(.*)$ backend/public/$1 [END]
+    RewriteRule ^api(/.*)?$ backend/public/index.php [END,QSA]
+
+    RewriteCond %{DOCUMENT_ROOT}/frontend/dist/index.html -f
+    RewriteCond %{DOCUMENT_ROOT}/frontend/dist/$1 -f [OR]
+    RewriteCond %{DOCUMENT_ROOT}/frontend/dist/$1 -d
+    RewriteRule ^(.*)$ frontend/dist/$1 [END]
+
+    RewriteCond %{DOCUMENT_ROOT}/frontend/dist/index.html -f
+    RewriteRule ^ frontend/dist/index.html [END]
 
     RewriteRule ^ backend/public/index.php [END]
 </IfModule>

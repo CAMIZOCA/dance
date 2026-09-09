@@ -18,7 +18,7 @@
 - Fase 1 / P1-ID-01 parcial: API JSON versionada sobre guard `web` para login/logout, reset, verificación de email, `/me`, listado/selección de tenants, cabeceras `no-store`, rate limits y middleware de `TenantContext` por sesión.
 - Frontend PWA conectado al flujo de identidad: login, recuperación, selección explícita de academia, shell autenticado, edición de perfil, cambio de tenant y logout con purga de caché privada.
 - Persistencia inicial de acciones de pantalla: endpoint `/api/v1/records` protegido por sesión, email verificado y academia activa; registros ligados a usuario y tenant con aislamiento cross-tenant; Inicio, agenda, archivo, Grupos, Explorar y Clases guardan actividad real y el Perfil muestra los últimos registros.
-- Entorno Laragon local verificado: `dance.test` resuelve a `127.0.0.1`, Apache escucha en puerto 80 y el dominio local enruta hacia `backend/public` mediante `.htaccess`; `APP_URL` local quedó en `http://dance.test`.
+- Entorno Laragon local verificado: `dance.test` resuelve a `127.0.0.1`, Apache escucha en puerto 80, el dominio sirve la PWA compilada desde `frontend/dist` y conserva `/api/*` en Laravel mediante `.htaccess`; `APP_URL` local quedó en `http://dance.test`.
 
 ## Evidencia ejecutada localmente
 
