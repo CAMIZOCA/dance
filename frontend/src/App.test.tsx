@@ -181,4 +181,47 @@ describe('App shell', () => {
     ))
     expect(await screen.findByText('Registro guardado en la academia activa.')).toBeInTheDocument()
   })
+
+  it('renueva el token csrf si Laravel rechaza el primer intento de login', async () => {
+    const user = userEvent.setup()
+    let loginAttempts = 0
+    const fetchMock = vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(new Response(null, { status: 401 }))
+      .mockResolvedValueOnce(new Response(null, { status: 401 }))
+      .mockImplementation((input) => {
+        const url = input.toString()
+
+        if (url.endsWith('/csrf-token')) {
+          return jsonResponse({ csrf_token: 'token' })
+        }
+
+        if (url.endsWith('/auth/login')) {
+          loginAttempts += 1
+
+          if (loginAttempts === 1) {
+            return jsonResponse({ message: 'CSRF token mismatch.' }, { status: 419 })
+          }
+
+          return jsonResponse({ data: userPayload })
+        }
+
+        if (url.endsWith('/me')) {
+          return jsonResponse({ data: userPayload })
+        }
+
+        if (url.endsWith('/tenants')) {
+          return jsonResponse({ data: [tenantPayload] })
+        }
+
+        return Promise.resolve(new Response(null, { status: 404 }))
+      })
+
+    render(<App />)
+
+    await user.click(await screen.findByRole('button', { name: 'Entrar' }))
+
+    expect(await screen.findByRole('heading', { name: 'Hola, Camila. Elige tu academia.' })).toBeInTheDocument()
+    expect(loginAttempts).toBe(2)
+    expect(fetchMock).toHaveBeenCalledWith('/api/v1/csrf-token', expect.any(Object))
+  })
 })

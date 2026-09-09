@@ -19,6 +19,7 @@
 - Frontend PWA conectado al flujo de identidad: login, recuperación, selección explícita de academia, shell autenticado, edición de perfil, cambio de tenant y logout con purga de caché privada.
 - Persistencia inicial de acciones de pantalla: endpoint `/api/v1/records` protegido por sesión, email verificado y academia activa; registros ligados a usuario y tenant con aislamiento cross-tenant; Inicio, agenda, archivo, Grupos, Explorar y Clases guardan actividad real y el Perfil muestra los últimos registros.
 - Entorno Laragon local verificado: `dance.test` resuelve a `127.0.0.1`, Apache escucha en puerto 80, el dominio sirve la PWA compilada desde `frontend/dist` y conserva `/api/*` en Laravel mediante `.htaccess`; `APP_URL` local quedó en `http://dance.test`.
+- CSRF del frontend endurecido: la PWA conserva el token devuelto por `/api/v1/csrf-token`, lo envía en acciones mutables y reintenta una vez con token fresco si Laravel responde 419; login, selección de academia y registro de actividad fueron verificados contra `http://dance.test`.
 
 ## Evidencia ejecutada localmente
 
@@ -33,7 +34,7 @@
 | `composer audit --locked` | PASS, sin advisories |
 | `npm run lint` | PASS |
 | `npm run typecheck` | PASS |
-| `npm run test` | PASS, Vitest 4/4 |
+| `npm run test` | PASS, Vitest 5/5 |
 | `npm run build` | PASS, 2.093 módulos |
 | `npm run test:e2e` | PASS, Playwright 14/14 móvil + escritorio |
 | `npm audit` | PASS, 0 vulnerabilidades |

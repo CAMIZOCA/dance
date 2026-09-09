@@ -1,4 +1,4 @@
-const CACHE_NAME = 'dance-shell-v0.2.0'
+const CACHE_NAME = 'dance-shell-v0.2.2'
 const PRIVATE_CACHE_PREFIX = 'dance-private-'
 const APP_SHELL = ['/', '/index.html', '/manifest.webmanifest', '/dance-mark.svg']
 const MEDIA_EXTENSIONS = /\.(?:mp4|webm|mov|m4v|avi|mp3|wav|ogg)(?:\?.*)?$/i

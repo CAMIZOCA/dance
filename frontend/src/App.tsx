@@ -95,12 +95,30 @@ const entrance = {
   transition: { duration: 0.46, ease: [0.22, 1, 0.36, 1] as const }
 }
 
-async function apiRequest<T>(path: string, options: RequestInit = {}): Promise<T> {
+class ApiRequestError extends Error {
+  constructor(message: string, public readonly status: number) {
+    super(message)
+  }
+}
+
+let csrfToken: string | null = null
+
+function isStateChangingRequest(options: RequestInit): boolean {
+  const method = options.method?.toUpperCase() ?? 'GET'
+
+  return !['GET', 'HEAD', 'OPTIONS'].includes(method)
+}
+
+async function apiRequest<T>(path: string, options: RequestInit = {}, retryWithFreshCsrf = true): Promise<T> {
   const headers = new Headers(options.headers)
   headers.set('Accept', 'application/json')
 
   if (options.body && !headers.has('Content-Type')) {
     headers.set('Content-Type', 'application/json')
+  }
+
+  if (csrfToken && isStateChangingRequest(options) && !headers.has('X-CSRF-TOKEN')) {
+    headers.set('X-CSRF-TOKEN', csrfToken)
   }
 
   const response = await fetch(path, {
@@ -109,10 +127,16 @@ async function apiRequest<T>(path: string, options: RequestInit = {}): Promise<T
     headers
   })
 
+  if (response.status === 419 && retryWithFreshCsrf && isStateChangingRequest(options)) {
+    await prepareCsrf()
+
+    return apiRequest<T>(path, options, false)
+  }
+
   if (!response.ok) {
     const payload = await response.json().catch(() => ({})) as { message?: string; errors?: Record<string, string[]> }
     const message = payload.errors ? Object.values(payload.errors).flat()[0] : payload.message
-    throw new Error(message ?? 'No fue posible completar la solicitud.')
+    throw new ApiRequestError(message ?? 'No fue posible completar la solicitud.', response.status)
   }
 
   if (response.status === 204) {
@@ -123,7 +147,8 @@ async function apiRequest<T>(path: string, options: RequestInit = {}): Promise<T
 }
 
 async function prepareCsrf(): Promise<void> {
-  await apiRequest<{ csrf_token: string }>('/api/v1/csrf-token')
+  const response = await apiRequest<{ csrf_token: string }>('/api/v1/csrf-token', {}, false)
+  csrfToken = response.csrf_token
 }
 
 async function loadRecords(): Promise<ActivityRecord[]> {
