@@ -83,6 +83,18 @@ test('abre el shell y navega a Explorar', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Explorar', level: 1 })).toBeVisible()
 })
 
+test('abre la búsqueda nativa y filtra sus resultados', async ({ page }) => {
+  await mockAuthenticatedApi(page)
+  await page.goto('/')
+
+  await page.getByRole('button', { name: 'Buscar' }).click()
+  await expect(page.getByRole('heading', { name: 'Buscar en Danza' })).toBeVisible()
+  await page.getByRole('searchbox', { name: 'Buscar clases, grupos o colecciones' }).fill('Huellas')
+
+  await expect(page.getByRole('button', { name: 'Huellas de ciudad COLECCIÓN 06' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Laboratorio de piso Contemporáneo · Nivel abierto' })).toBeHidden()
+})
+
 test('guarda una acción desde el inicio y la enseña en perfil', async ({ page }) => {
   await mockAuthenticatedApi(page)
   await page.goto('/')

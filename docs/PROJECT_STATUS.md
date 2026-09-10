@@ -17,6 +17,7 @@
 - CI configurado con PostgreSQL real, Redis, Pest, PHPStan, Pint, frontend gates y Playwright.
 - Fase 1 / P1-ID-01 parcial: API JSON versionada sobre guard `web` para login/logout, reset, verificación de email, `/me`, listado/selección de tenants, cabeceras `no-store`, rate limits y middleware de `TenantContext` por sesión.
 - Frontend PWA conectado al flujo de identidad: login, recuperación, selección explícita de academia, shell autenticado, edición de perfil, cambio de tenant y logout con purga de caché privada.
+- Sistema visual mobile-first aplicado al shell completo: tokens semánticos globales, safe areas, targets táctiles de 48 px, headers compactos, navegación inferior, superficies/listas nativas, estados pressed/loading/disabled, formularios y bottom sheet de búsqueda; conserva navegación lateral adaptativa para tablet y escritorio.
 - Persistencia inicial de acciones de pantalla: endpoint `/api/v1/records` protegido por sesión, email verificado y academia activa; registros ligados a usuario y tenant con aislamiento cross-tenant; Inicio, agenda, archivo, Grupos, Explorar y Clases guardan actividad real y el Perfil muestra los últimos registros.
 - Entorno Laragon local verificado: `dance.test` resuelve a `127.0.0.1`, Apache escucha en puerto 80, el dominio sirve la PWA compilada desde `frontend/dist` y conserva `/api/*` en Laravel mediante `.htaccess`; `APP_URL` local quedó en `http://dance.test`.
 - CSRF del frontend endurecido: la PWA conserva el token devuelto por `/api/v1/csrf-token`, lo envía en acciones mutables y reintenta una vez con token fresco si Laravel responde 419; login, selección de academia y registro de actividad fueron verificados contra `http://dance.test`.
@@ -36,7 +37,8 @@
 | `npm run typecheck` | PASS |
 | `npm run test` | PASS, Vitest 5/5 |
 | `npm run build` | PASS, 2.093 módulos |
-| `npm run test:e2e` | PASS, Playwright 14/14 móvil + escritorio |
+| `npm run test:e2e` | PASS, Playwright 16/16 móvil + escritorio |
+| QA visual mobile/tablet/desktop | PASS, viewports 390×844, 820×1180 y 1440×900 |
 | `npm audit` | PASS, 0 vulnerabilidades |
 | Compose local/producción `config --quiet` | PASS; producción falla sin secretos como se espera |
 

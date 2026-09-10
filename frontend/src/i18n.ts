@@ -7,6 +7,12 @@ const resources = {
       nav: { home: 'Inicio', groups: 'Grupos', explore: 'Explorar', classes: 'Clases', profile: 'Perfil' },
       brand: { eyebrow: 'Archivo vivo', location: 'Bogotá · Colombia' },
       actions: { search: 'Buscar', openCollection: 'Abrir colección' },
+      search: {
+        title: 'Buscar en Danza',
+        placeholder: 'Clases, grupos o colecciones',
+        inputLabel: 'Buscar clases, grupos o colecciones',
+        empty: 'No encontramos resultados con ese nombre.'
+      },
       auth: {
         eyebrow: 'Acceso privado',
         title: 'La memoria de tu academia, cuidada por sesión.',
@@ -57,6 +63,7 @@ const resources = {
         name: 'Nombre',
         email: 'Correo',
         save: 'Guardar cambios',
+        saving: 'Guardando…',
         saved: 'Perfil actualizado.',
         verified: 'correo verificado',
         unverified: 'correo pendiente de verificación',

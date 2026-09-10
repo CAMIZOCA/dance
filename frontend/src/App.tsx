@@ -191,6 +191,17 @@ function Brand() {
   )
 }
 
+function MobileHeader({ actionLabel, onAction, actionIcon: ActionIcon = Search }: { actionLabel: string; onAction: () => void; actionIcon?: ComponentType<{ size?: number; strokeWidth?: number }> }) {
+  return (
+    <header className="mobile-header">
+      <Brand />
+      <button className="icon-button" type="button" aria-label={actionLabel} onClick={onAction}>
+        <ActionIcon size={20} strokeWidth={1.8} />
+      </button>
+    </header>
+  )
+}
+
 function Navigation({ active, onNavigate }: { active: Screen; onNavigate: (screen: Screen) => void }) {
   const { t } = useTranslation()
   return (
@@ -215,21 +226,20 @@ function Navigation({ active, onNavigate }: { active: Screen; onNavigate: (scree
 function HomeScreen({
   onNavigate,
   onRecordAction,
+  onSearch,
   user,
   tenant
 }: {
   onNavigate: (screen: Screen) => void
   onRecordAction: (type: ActivityRecord['type'], label: string, metadata?: Record<string, unknown>) => void
+  onSearch: () => void
   user: ApiUser
   tenant: Tenant
 }) {
   const { t } = useTranslation()
   return (
     <motion.div {...entrance} className="screen home-screen">
-      <header className="mobile-header">
-        <Brand />
-        <button className="icon-button" aria-label={t('actions.search')}><Search size={20} /></button>
-      </header>
+      <MobileHeader actionLabel={t('actions.search')} onAction={onSearch} />
 
       <section className="intro-block">
         <p className="eyebrow">{t('home.date')}</p>
@@ -305,6 +315,70 @@ function AgendaRow({ day, weekday, title, meta, tone, onSelect }: { day: string;
   )
 }
 
+function SearchSheet({ onClose, onNavigate }: { onClose: () => void; onNavigate: (screen: Screen) => void }) {
+  const { t } = useTranslation()
+  const [query, setQuery] = useState('')
+  const searchItems: { label: string; meta: string; screen: Screen; icon: NavItem['icon'] }[] = [
+    { label: t('featuredClass.title'), meta: t('featuredClass.type'), screen: 'classes', icon: CalendarDays },
+    { label: t('archive.title'), meta: t('archive.collection'), screen: 'explore', icon: Compass },
+    { label: t('screens.groups.first'), meta: t('screens.groups.eyebrow'), screen: 'groups', icon: UsersRound },
+    { label: t('screens.explore.first'), meta: t('screens.explore.eyebrow'), screen: 'explore', icon: Sparkles },
+    { label: t('agenda.second.title'), meta: t('agenda.second.meta'), screen: 'classes', icon: CalendarDays }
+  ]
+  const normalizedQuery = query.trim().toLocaleLowerCase('es')
+  const results = normalizedQuery
+    ? searchItems.filter((item) => `${item.label} ${item.meta}`.toLocaleLowerCase('es').includes(normalizedQuery))
+    : searchItems
+
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow
+    const onKeyDown = (event: KeyboardEvent) => { if (event.key === 'Escape') onClose() }
+    document.body.style.overflow = 'hidden'
+    window.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.body.style.overflow = previousOverflow
+      window.removeEventListener('keydown', onKeyDown)
+    }
+  }, [onClose])
+
+  return (
+    <motion.div className="sheet-scrim" role="presentation" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}>
+      <motion.section
+        className="bottom-sheet"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="search-title"
+        initial={{ y: 48, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: 48, opacity: 0 }}
+        transition={{ duration: .24, ease: [0.22, 1, 0.36, 1] }}
+      >
+        <div className="sheet-handle" aria-hidden="true" />
+        <header className="sheet-header">
+          <h2 id="search-title">{t('search.title')}</h2>
+          <button className="close-button" type="button" aria-label={t('status.close')} onClick={onClose}><X size={20} /></button>
+        </header>
+        <div className="search-control">
+          <Search size={19} />
+          <input className="search-field" type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t('search.placeholder')} aria-label={t('search.inputLabel')} autoFocus />
+        </div>
+        <div className="search-results" aria-live="polite">
+          {results.length === 0 ? <p>{t('search.empty')}</p> : results.map((item) => {
+            const Icon = item.icon
+            return (
+              <button key={`${item.screen}-${item.label}`} type="button" onClick={() => { onNavigate(item.screen); onClose() }}>
+                <span className="result-icon"><Icon size={19} strokeWidth={1.8} /></span>
+                <span><strong>{item.label}</strong><small>{item.meta}</small></span>
+                <ChevronRight size={18} />
+              </button>
+            )
+          })}
+        </div>
+      </motion.section>
+    </motion.div>
+  )
+}
+
 function SecondaryScreen({
   screen,
   user,
@@ -314,6 +388,7 @@ function SecondaryScreen({
   onLogout,
   onUserChange,
   onRecordAction,
+  onSearch,
   records
 }: {
   screen: Exclude<Screen, 'home'>
@@ -324,6 +399,7 @@ function SecondaryScreen({
   onLogout: () => void
   onUserChange: (user: ApiUser) => void
   onRecordAction: (type: ActivityRecord['type'], label: string, metadata?: Record<string, unknown>) => void
+  onSearch: () => void
   records: ActivityRecord[]
 }) {
   const { t } = useTranslation()
@@ -346,7 +422,7 @@ function SecondaryScreen({
 
   return (
     <motion.div key={screen} {...entrance} className="screen secondary-screen">
-      <header className="mobile-header"><Brand /><button className="icon-button" aria-label={t('actions.search')}><Search size={20} /></button></header>
+      <MobileHeader actionLabel={t('actions.search')} onAction={onSearch} />
       <section className="secondary-intro">
         <p className="eyebrow">{t(`${key}.eyebrow`)}</p>
         <h1>{t(`${key}.title`)}</h1>
@@ -446,9 +522,11 @@ function AuthScreen({ onAuthenticated }: { onAuthenticated: (state: AuthState) =
 function TenantSelectionScreen({ state, onSelected, onLogout }: { state: Extract<AuthState, { status: 'selecting-tenant' }>; onSelected: (tenant: Tenant, user: ApiUser) => void; onLogout: () => void }) {
   const { t } = useTranslation()
   const [message, setMessage] = useState<string | null>(null)
+  const [selectingId, setSelectingId] = useState<number | null>(null)
 
   const selectTenant = async (tenant: Tenant) => {
     setMessage(null)
+    setSelectingId(tenant.id)
 
     try {
       await prepareCsrf()
@@ -460,6 +538,8 @@ function TenantSelectionScreen({ state, onSelected, onLogout }: { state: Extract
       onSelected(selected.data, session.data)
     } catch (error) {
       setMessage(error instanceof Error ? error.message : t('auth.genericError'))
+    } finally {
+      setSelectingId(null)
     }
   }
 
@@ -475,10 +555,10 @@ function TenantSelectionScreen({ state, onSelected, onLogout }: { state: Extract
         <p>{t('tenant.subtitle')}</p>
         <div className="tenant-list">
           {state.tenants.map((tenant) => (
-            <button key={tenant.id} type="button" onClick={() => void selectTenant(tenant)}>
+            <button key={tenant.id} type="button" disabled={selectingId !== null} aria-busy={selectingId === tenant.id} onClick={() => void selectTenant(tenant)}>
               <span className="tenant-swatch" style={{ background: tenant.primary_color }} />
               <span><strong>{tenant.name}</strong><small>{tenant.slug}</small></span>
-              <ArrowRight size={19} />
+              {selectingId === tenant.id ? <RefreshCw size={19} className="spin" /> : <ArrowRight size={19} />}
             </button>
           ))}
         </div>
@@ -509,6 +589,7 @@ function ProfileScreen({
   const [name, setName] = useState(user.name)
   const [email, setEmail] = useState(user.email)
   const [message, setMessage] = useState<string | null>(null)
+  const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     setName(user.name)
@@ -518,6 +599,7 @@ function ProfileScreen({
   const saveProfile = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setMessage(null)
+    setSaving(true)
 
     try {
       await prepareCsrf()
@@ -529,6 +611,8 @@ function ProfileScreen({
       setMessage(t('profile.saved'))
     } catch (error) {
       setMessage(error instanceof Error ? error.message : t('auth.genericError'))
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -547,7 +631,7 @@ function ProfileScreen({
 
   return (
     <motion.div key="profile" {...entrance} className="screen secondary-screen profile-screen">
-      <header className="mobile-header"><Brand /><button className="icon-button" aria-label={t('profile.logout')} onClick={onLogout}><DoorOpen size={20} /></button></header>
+      <MobileHeader actionLabel={t('profile.logout')} onAction={onLogout} actionIcon={DoorOpen} />
       <section className="secondary-intro profile-intro">
         <p className="eyebrow">{t('screens.profile.eyebrow')}</p>
         <h1>{t('screens.profile.title')}</h1>
@@ -563,7 +647,10 @@ function ProfileScreen({
             <span>{t('profile.email')}</span>
             <input value={email} onChange={(event) => setEmail(event.target.value)} type="email" required />
           </label>
-          <button className="primary-action" type="submit">{t('profile.save')}</button>
+          <button className="primary-action" type="submit" disabled={saving} aria-busy={saving}>
+            {saving && <RefreshCw size={17} className="spin" />}
+            {saving ? t('profile.saving') : t('profile.save')}
+          </button>
           {message && <p className="form-message" role="status">{message}</p>}
         </form>
         <div className="tenant-switcher">
@@ -627,6 +714,7 @@ export default function App() {
   const [active, setActive] = useState<Screen>(() => screenFromPath(window.location.pathname))
   const [authState, setAuthState] = useState<AuthState>({ status: 'loading' })
   const [recordMessage, setRecordMessage] = useState<string | null>(null)
+  const [searchOpen, setSearchOpen] = useState(false)
 
   useEffect(() => {
     void loadSession().then(setAuthState)
@@ -708,13 +796,14 @@ export default function App() {
     <div className="app-shell">
       <aside className="desktop-sidebar">
         <Brand />
+        <button className="sidebar-search" type="button" onClick={() => setSearchOpen(true)}><Search size={18} />{t('actions.search')}</button>
         <Navigation active={active} onNavigate={navigate} />
         <div className="sidebar-note"><span className="live-dot" /> {t('sync.label')}<br /><small>{t('sync.time')}</small></div>
       </aside>
       <main>
         <AnimatePresence mode="wait">
           {active === 'home' ? (
-            <HomeScreen key="home" onNavigate={navigate} onRecordAction={(type, label, metadata) => void recordAction(type, label, metadata)} user={session.user} tenant={session.activeTenant} />
+            <HomeScreen key="home" onNavigate={navigate} onSearch={() => setSearchOpen(true)} onRecordAction={(type, label, metadata) => void recordAction(type, label, metadata)} user={session.user} tenant={session.activeTenant} />
           ) : (
             <SecondaryScreen
               key={active}
@@ -725,6 +814,7 @@ export default function App() {
               onLogout={() => void logout()}
               onUserChange={(user) => setAuthState({ ...session, user })}
               onRecordAction={(type, label, metadata) => void recordAction(type, label, metadata)}
+              onSearch={() => setSearchOpen(true)}
               records={session.records}
               onTenantChange={(tenant, user) => void loadRecords().then((records) => setAuthState({
                 status: 'authenticated',
@@ -739,6 +829,7 @@ export default function App() {
       </main>
       <div className="mobile-navigation"><Navigation active={active} onNavigate={navigate} /></div>
       {recordMessage && <motion.aside className="record-toast" role="status" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>{recordMessage}</motion.aside>}
+      <AnimatePresence>{searchOpen && <SearchSheet onClose={() => setSearchOpen(false)} onNavigate={navigate} />}</AnimatePresence>
       <PwaNotice />
     </div>
   )
